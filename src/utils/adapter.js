@@ -1,31 +1,35 @@
 export function adaptToServer(point) {
-  const adaptedPoint = {...point,
-    'date_from': point.dateFrom instanceof Date ? point.dateFrom.toISOString() : null,
-    'date_to': point.dateTo instanceof Date ? point.dateTo.toISOString() : null,
-    'base_price': point.basePrice,
-    'is_favorite': point.isFavorite,
+  const {
+    dateFrom,
+    dateTo,
+    basePrice,
+    isFavorite,
+    ...rest
+  } = point;
+
+  return {
+    ...rest,
+    'date_from': dateFrom instanceof Date ? dateFrom.toISOString() : null,
+    'date_to': dateTo instanceof Date ? dateTo.toISOString() : null,
+    'base_price': basePrice,
+    'is_favorite': isFavorite,
   };
-
-  delete adaptedPoint.dateFrom;
-  delete adaptedPoint.dateTo;
-  delete adaptedPoint.basePrice;
-  delete adaptedPoint.isFavorite;
-
-  return adaptedPoint;
 }
 
 export function adaptToClient(point) {
-  const adaptedPoint = {...point,
-    dateFrom: point['date_from'] !== null ? new Date(point['date_from']) : new Date(point['date_from']),
-    dateTo: point['date_to'] !== null ? new Date(point['date_to']) : new Date(point['date_to']),
-    basePrice: point['base_price'],
-    isFavorite: point['is_favorite'],
+  const {
+    'date_from': dateFromRaw,
+    'date_to': dateToRaw,
+    'base_price': basePrice,
+    'is_favorite': isFavorite,
+    ...rest
+  } = point;
+
+  return {
+    ...rest,
+    dateFrom: dateFromRaw ? new Date(dateFromRaw) : null,
+    dateTo: dateToRaw ? new Date(dateToRaw) : null,
+    basePrice,
+    isFavorite,
   };
-
-  delete adaptedPoint['date_from'];
-  delete adaptedPoint['date_to'];
-  delete adaptedPoint['base_price'];
-  delete adaptedPoint['is_favorite'];
-
-  return adaptedPoint;
 }

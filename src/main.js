@@ -1,40 +1,59 @@
-import PointListPresenter from './presenter/point-list-presenter.js';
 import PointsListModel from './model/points-list-model.js';
-import FilterPresenter from './presenter/filter-presenter.js';
+import SortModel from './model/sort-model.js';
 import FilterModel from './model/filter-model.js';
+
 import NewPointButtonPresenter from './presenter/new-point-button-presenter.js';
+import SortPresenter from './presenter/sort-presenter.js';
+import PointListPresenter from './presenter/point-list-presenter.js';
 import TripInfoPresenter from './presenter/trip-info-presenter.js';
+import FilterPresenter from './presenter/filter-presenter.js';
+
 import PointsApiService from './point-api-service.js';
 import { AUTHORIZATION, END_POINT } from './const.js';
 
-const pointsListModel = new PointsListModel({pointsApiService: new PointsApiService(END_POINT, AUTHORIZATION)});
+const filterContainer = document.querySelector('.trip-controls__filters');
+const tripEventsContainer = document.querySelector('.trip-events');
+const tripMainContainer = document.querySelector('.trip-main');
 
+const sortModel = new SortModel();
 const filterModel = new FilterModel();
-
-const tripInfoPresenter = new TripInfoPresenter({
-  container: document.querySelector('.trip-main'),
-  pointsListModel: pointsListModel
+const pointsListModel = new PointsListModel({
+  pointsApiService: new PointsApiService(END_POINT, AUTHORIZATION)
 });
 
 const newPointButtonPresenter = new NewPointButtonPresenter({
-  container: document.querySelector('.trip-main')
+  containerElement: tripMainContainer,
+  pointsListModel,
 });
 
 const pointsListPresenter = new PointListPresenter({
-
-
-  tripEvents: document.querySelector('.trip-events'),
-  filterModel,
+  containerElement: tripEventsContainer,
   pointsListModel,
-  newPointButtonPresenter
+  filterModel,
+  sortModel,
+  newPointButtonPresenter,
 });
 
 new FilterPresenter({
-  filterContainer: document.querySelector('.trip-controls__filters'),
+  containerElement: filterContainer,
+  pointsListModel,
   filterModel,
-  pointsListModel
 }).init();
-newPointButtonPresenter.init({onNewPointButtonClick: pointsListPresenter.onNewPointButtonClick});
-pointsListPresenter.init();
+
+new SortPresenter({
+  containerElement: tripEventsContainer,
+  pointsListModel,
+  sortModel,
+  filterModel,
+}).init();
+
+new TripInfoPresenter({
+  containerElement: tripMainContainer,
+  pointsListModel,
+}).init();
+
 pointsListModel.init();
-tripInfoPresenter.init();
+pointsListPresenter.init();
+newPointButtonPresenter.init({
+  buttonClickHandler: pointsListPresenter.newPointButtonClickHandler
+});

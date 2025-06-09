@@ -1,31 +1,36 @@
 import { render } from '../framework/render.js';
+import { UpdateType } from '../const.js';
 import NewPointButtonView from '../view/new-point-button-view.js';
 
 export default class NewPointButtonPresenter {
-  #container = null;
-  #button = null;
-  #clickAction = null;
+  #container;
+  #component;
 
-  constructor({container}) {
-    this.#container = container;
+  constructor({containerElement, pointsListModel}) {
+    this.#container = containerElement;
+    pointsListModel.addObserver(this.#modelChangeHandler);
   }
 
-  init({onNewPointButtonClick}) {
-    this.#clickAction = onNewPointButtonClick;
-
-    this.#button = new NewPointButtonView({onNewPointButtonClick: this.#onNewPointButtonClick});
-    render(this.#button, this.#container);
+  init({buttonClickHandler}) {
+    this.#component = new NewPointButtonView({ buttonClickHandler: buttonClickHandler });
+    render(this.#component, this.#container);
   }
 
   disableButton() {
-    this.#button.setDisabled(true);
+    this.#component?.setDisabled(true);
   }
 
   enableButton() {
-    this.#button.setDisabled(false);
+    this.#component?.setDisabled(false);
   }
 
-  #onNewPointButtonClick = () => {
-    this.#clickAction();
+  #modelChangeHandler = (updateType, { isError } = {}) => {
+    if (updateType === UpdateType.INIT) {
+      if (isError) {
+        this.disableButton();
+      } else {
+        this.enableButton();
+      }
+    }
   };
 }

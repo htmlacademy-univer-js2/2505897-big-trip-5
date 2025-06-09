@@ -1,40 +1,48 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import {getDateDifference, getTime, getMonthAndDay, getOfferById, getOffersByType, getDestinationById} from '../utils/point-utils.js';
+import { getDateDifference, getTime, getMonthAndDay, getOfferById, getOffersByType, getDestinationById } from '../utils/point-utils.js';
 
-function createOfferTemplate(offerId, offers) {
-  const {title, price} = getOfferById(offerId, offers) || {};
+function createOfferItem(offerId, availableOffers) {
+  const currentOffer = getOfferById(offerId, availableOffers) || {};
 
-  return `<li class="event__offer">
-            <span class="event__offer-title">${title}</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">${price}</span>
-          </li>`;
+  if (!currentOffer) {
+    return '';
+  }
+
+  return `
+    <li class="event__offer">
+      <span class="event__offer-title">${currentOffer.title}</span>
+      &plus;&euro;&nbsp;
+      <span class="event__offer-price">${currentOffer.price}</span>
+    </li>
+  `;
 }
 
-const createPointRouteTemplate = (point, destinations, allOffers) => {
+function createTemplate(point, destinations, allOffers) {
   const {type, destination, dateFrom, dateTo, basePrice, offers, isFavorite} = point;
 
-  const startDate = getMonthAndDay(dateFrom);
-
-  const startTime = getTime(dateFrom);
-  const endTime = getTime(dateTo);
+  const startingDate = getMonthAndDay(dateFrom);
+  const startingTime = getTime(dateFrom);
+  const endingTime = getTime(dateTo);
   const duration = getDateDifference(dateFrom, dateTo);
   const availableOffers = getOffersByType(type, allOffers);
-  const pointDestination = getDestinationById(destination, destinations);
+  const destinationInfo = getDestinationById(destination, destinations);
 
-  return (
-    `<li class="trip-events__item">
+  const offersMarkup = offers.map((offerId) => createOfferItem(offerId, availableOffers)).join('');
+  const favoriteClass = isFavorite ? 'event__favorite-btn--active' : '';
+
+  return `
+    <li class="trip-events__item">
       <div class="event">
-        <time class="event__date" datetime="${dateFrom}">${startDate}</time>
+        <time class="event__date" datetime="${dateFrom}">${startingDate}</time>
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${pointDestination.name}</h3>
+        <h3 class="event__title">${type} ${destinationInfo.name}</h3>
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime="${dateFrom}">${startTime}</time>
+            <time class="event__start-time" datetime="${dateFrom}">${startingTime}</time>
             &mdash;
-            <time class="event__end-time" datetime="${dateTo}">${endTime}</time>
+            <time class="event__end-time" datetime="${dateTo}">${endingTime}</time>
           </p>
           <p class="event__duration">${duration}</p>
         </div>
@@ -43,9 +51,9 @@ const createPointRouteTemplate = (point, destinations, allOffers) => {
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
-          ${offers.map((offerId) => createOfferTemplate(offerId, availableOffers)).join('')}
+          ${offersMarkup}
         </ul>
-        <button class="event__favorite-btn  ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
+        <button class="event__favorite-btn  ${favoriteClass}" type="button">
           <span class="visually-hidden">Add to favorite</span>
           <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -55,34 +63,43 @@ const createPointRouteTemplate = (point, destinations, allOffers) => {
           <span class="visually-hidden">Open event</span>
         </button>
       </div>
-    </li>`
-  );
-};
+    </li>
+    `;
+}
 
 export default class PointRouteView extends AbstractView {
-  #point = null;
-  #destinations = null;
-  #offers = null;
+  #currentPoint;
+  #currentDestinations;
+  #currentOffers;
+  #rollupButtonClickHandler;
+  #favoriteButtonClickHandler;
 
-  constructor({point, destinations, offers, onRollButtonClick, onFavoriteClick}) {
+  constructor({point, destinations, offers, rollupButtonClickHandler, favoriteButtonClickHandler}) {
     super();
-    this.#point = point;
-    this.#destinations = destinations;
-    this.#offers = offers;
+    this.#currentPoint = point;
+    this.#currentDestinations = destinations;
+    this.#currentOffers = offers;
+    this.#rollupButtonClickHandler = rollupButtonClickHandler;
+    this.#favoriteButtonClickHandler = favoriteButtonClickHandler;
 
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', (event) => {
-      event.preventDefault();
-      onRollButtonClick();
-    });
-
-    this.element.querySelector('.event__favorite-btn').addEventListener('click', (event) => {
-      event.preventDefault();
-      onFavoriteClick();
-      event.currentTarget.blur();
-    });
+    const rollupButtonElement = this.element.querySelector('.event__rollup-btn');
+    const favoriteButtonElement = this.element.querySelector('.event__favorite-btn');
+    rollupButtonElement.addEventListener('click', this.#rollupButtonElementClickHandler);
+    favoriteButtonElement.addEventListener('click', this.#favoriteButtonElementClickHandler);
   }
 
   get template() {
-    return createPointRouteTemplate(this.#point, this.#destinations, this.#offers);
+    return createTemplate(this.#currentPoint, this.#currentDestinations, this.#currentOffers);
   }
+
+  #rollupButtonElementClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#rollupButtonClickHandler();
+  };
+
+  #favoriteButtonElementClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#favoriteButtonClickHandler();
+    evt.currentTarget.blur();
+  };
 }

@@ -1,55 +1,53 @@
-import { ACTIONS, UPDATE_TYPES, FORM_TYPE } from '../const.js';
+import { ActionType, UpdateType, FormType } from '../const.js';
 import { remove, render, RenderPosition } from '../framework/render';
 import FormEditingView from '../view/editing-form-view.js';
+import { createEscKeydownHandler } from '../utils/common-utils.js';
 
 export default class NewPointPresenter {
-  #container = null;
-  #pointNewComponent = null;
-  #pointsListModel = null;
-  #onDataChange = null;
-  #onDestroy = null;
+  #container;
+  #component;
+  #pointsListModel;
+  #infoChangeHandler;
+  #componentDestroyHandler;
 
-  constructor({container, pointsListModel, onDataChange, onDestroy}) {
-    this.#container = container;
+  constructor({containerElement, pointsListModel, dataChangeHandler, componentDestroyHandler}) {
+    this.#container = containerElement;
     this.#pointsListModel = pointsListModel;
-    this.#onDataChange = onDataChange;
-    this.#onDestroy = onDestroy;
+    this.#infoChangeHandler = dataChangeHandler;
+    this.#componentDestroyHandler = componentDestroyHandler;
   }
 
   init() {
-    if(this.#pointNewComponent !== null) {
+    if(this.#component) {
       return;
     }
 
-    this.#pointNewComponent = new FormEditingView({
+    this.#component = new FormEditingView({
       destinations: this.#pointsListModel.destinations,
       offers: this.#pointsListModel.offers,
-      onRollButtonClick: this.#onResetClick,
-      onSubmitButtonClick: this.#onSubmitButtonClick,
-      onResetClick: this.#onResetClick,
-      type: FORM_TYPE.CREATE,
+      formType: FormType.CREATE,
+      rollupButtonClickHandler: this.#rollupButtonClickHandler,
+      submitButtonClickHandler: this.#submitButtonClickHandler,
+      cancelButtonClickHandler: this.#cancelButtonClickHandler,
     });
 
-    render(this.#pointNewComponent, this.#container, RenderPosition.AFTERBEGIN);
-    document.addEventListener('keydown', this.#onEscKeydown);
+    render(this.#component, this.#container, RenderPosition.AFTERBEGIN);
+    document.addEventListener('keydown', this.#escKeydownHandler);
   }
 
-  destroy = ({isCanceled = true} = {}) => {
-    if (this.#pointNewComponent === null) {
+  destroy() {
+    if (!this.#component) {
       return;
     }
 
-    this.#onDestroy({isCanceled});
-
-    remove(this.#pointNewComponent);
-    this.#pointNewComponent = null;
-    document.removeEventListener('keydown', this.#onEscKeydown);
-
-
-  };
+    this.#componentDestroyHandler();
+    remove(this.#component);
+    this.#component = null;
+    document.removeEventListener('keydown', this.#escKeydownHandler);
+  }
 
   setSaving() {
-    this.#pointNewComponent.updateElement({
+    this.#component.updateElement({
       isDisabled: true,
       isSaving: true,
     });
@@ -57,33 +55,21 @@ export default class NewPointPresenter {
 
   setAborting() {
     const resetFormState = () => {
-      this.#pointNewComponent.updateElement({
+      this.#component.updateElement({
         isDisabled: false,
         isSaving: false,
         isDeleting: false,
       });
     };
 
-    this.#pointNewComponent.shake(resetFormState);
+    this.#component.shake(resetFormState);
   }
 
-  #onSubmitButtonClick = (point) => {
-    this.#onDataChange(
-      ACTIONS.ADD_POINT,
-      UPDATE_TYPES.MINOR,
-      point,
-    );
+  #submitButtonClickHandler = (pointData) => this.#infoChangeHandler(ActionType.ADD_POINT, UpdateType.MINOR, pointData);
 
-  };
+  #rollupButtonClickHandler = () => this.destroy();
 
-  #onResetClick = () => {
-    this.destroy();
-  };
+  #cancelButtonClickHandler = () => this.destroy();
 
-  #onEscKeydown = (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.destroy();
-    }
-  };
+  #escKeydownHandler = createEscKeydownHandler(() => this.destroy());
 }

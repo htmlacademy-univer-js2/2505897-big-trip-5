@@ -1,34 +1,42 @@
 import TripInfoView from '../view/trip-info-view.js';
-import { render, replace } from '../framework/render.js';
-import { RenderPosition } from '../framework/render.js';
+import { render, remove, replace, RenderPosition } from '../framework/render.js';
+import { getPointsDataRange, getTripPrice, getTripRoute } from '../utils/point-utils.js';
 
 export default class TripInfoPresenter {
-  #container = null;
-  #pointsListModel = null;
-  #tripInfoComponent = null;
+  #containerElement;
+  #pointsListModel;
+  #component;
 
-  constructor({ container, pointsListModel }) {
-    this.#container = container;
+  constructor({ containerElement, pointsListModel }) {
+    this.#containerElement = containerElement;
     this.#pointsListModel = pointsListModel;
-    this.#pointsListModel.addObserver(this.#onPointListModelChange);
+    this.#pointsListModel.addObserver(this.#modelChangeHandler);
   }
 
   init() {
-    this.#renderTripInfo();
-  }
+    const allPoints = this.#pointsListModel.points;
 
-  #onPointListModelChange = () => {
-    this.#renderTripInfo();
-  };
+    if (allPoints.length === 0) {
+      if (this.#component) {
+        remove(this.#component);
+        this.#component = null;
+      }
+      return;
+    }
 
-  #renderTripInfo() {
-    const prevComponent = this.#tripInfoComponent;
-    this.#tripInfoComponent = new TripInfoView(this.#pointsListModel.points, this.#pointsListModel.destinations, this.#pointsListModel.offers);
+    const dataLength = getPointsDataRange(allPoints);
+    const route = getTripRoute(allPoints, this.#pointsListModel.destinations);
+    const totalPrice = getTripPrice(allPoints, this.#pointsListModel.offers);
 
-    if (prevComponent === null) {
-      render(this.#tripInfoComponent, this.#container, RenderPosition.AFTERBEGIN);
+    const previousComponent = this.#component;
+    this.#component = new TripInfoView(dataLength, route, totalPrice);
+
+    if (!previousComponent) {
+      render(this.#component, this.#containerElement, RenderPosition.AFTERBEGIN);
     } else {
-      replace(this.#tripInfoComponent, prevComponent);
+      replace(this.#component, previousComponent);
     }
   }
+
+  #modelChangeHandler = () => this.init();
 }

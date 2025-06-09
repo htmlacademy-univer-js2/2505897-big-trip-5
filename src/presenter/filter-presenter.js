@@ -1,60 +1,42 @@
-import { FiltersView } from '../view/filters-view.js';
-import { FILTER_TYPES, UPDATE_TYPES } from '../const.js';
+import { UpdateType, FilterType } from '../const.js';
+import { render, replace } from '../framework/render.js';
 import { pointsFilters } from '../utils/filter-utils.js';
-import { render, replace } from '../framework/render';
+import FilterView from '../view/filters-view.js';
 
 export default class FilterPresenter {
-  #filterContainer = null;
-  #filterModel = null;
-  #pointsModel = null;
-  #filterComponent = null;
+  #pointsListModel;
+  #filterModel;
+  #container;
+  #component;
 
-  #onFilterTypeChange = (filterType) => {
-    if(this.#filterModel.filter === filterType) {
-      return;
-    }
-    this.#filterModel.setFilter(UPDATE_TYPES.MAJOR, filterType);
-  };
+  #modelChangeHandler = () => this.init();
 
-  #onPointsModelChange = () => {
-    this.init();
-  };
+  #filterTypeChangeHandler = (filterType) => this.#filterModel.setFilter(UpdateType.MAJOR, filterType);
 
-  constructor({filterContainer, filterModel, pointsListModel}) {
-    this.#filterContainer = filterContainer;
+  constructor({ containerElement, filterModel, pointsListModel }) {
+    this.#container = containerElement;
     this.#filterModel = filterModel;
-    this.#pointsModel = pointsListModel;
+    this.#pointsListModel = pointsListModel;
 
-    this.#pointsModel.addObserver(this.#onPointsModelChange);
-    this.#filterModel.addObserver(this.#onPointsModelChange);
-  }
-
-  get filters() {
-    const allPoints = this.#pointsModel.points;
-    return Object.values(FILTER_TYPES).map((type) => {
-      const count = pointsFilters[type](allPoints).length;
-      return {
-        id: type,
-        name: type,
-        disabled: count === 0
-      };
-    });
+    this.#pointsListModel.addObserver(this.#modelChangeHandler);
+    this.#filterModel.addObserver(this.#modelChangeHandler);
   }
 
   init() {
-    const prevFilterComponent = this.#filterComponent;
-
-    this.#filterComponent = new FiltersView({
-      filters: this.filters,
-      currentFilter: this.#filterModel.filter,
-      onFilterTypeChange: this.#onFilterTypeChange,
+    const previusComponent = this.#component;
+    this.#component = new FilterView({
+      currentFilterType: this.#filterModel.currentFilterType,
+      filterTypeChangeHandler: this.#filterTypeChangeHandler,
+      filters: Object.values(FilterType).map((filterType) => ({
+        filterType,
+        isDisabled: pointsFilters[filterType](this.#pointsListModel.points).length === 0
+      }))
     });
 
-    if (prevFilterComponent === null) {
-      render(this.#filterComponent, this.#filterContainer);
-      return;
+    if (!previusComponent) {
+      render(this.#component, this.#container);
+    } else {
+      replace(this.#component, previusComponent);
     }
-
-    replace(this.#filterComponent, prevFilterComponent);
   }
 }

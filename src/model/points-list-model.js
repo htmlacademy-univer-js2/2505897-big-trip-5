@@ -1,51 +1,21 @@
-import Observable from '../framework/observable.js';
-import { updateItem } from '../utils/point-utils.js';
+import { UpdateType } from '../const.js';
 import { adaptToClient } from '../utils/adapter.js';
-import { UPDATE_TYPES } from '../const.js';
+import { updateItem } from '../utils/point-utils.js';
+import Observable from '../framework/observable.js';
 
 export default class PointsListModel extends Observable {
-  #points = [];
-  #offers = [];
+  #pointsApiService;
   #destinations = [];
-  #pointsApiService = null;
-
-  constructor({pointsApiService}) {
-    super();
-    this.#pointsApiService = pointsApiService;
-  }
-
-  get points() {
-    return this.#points;
-  }
-
-  get offers() {
-    return this.#offers;
-  }
+  #offers = [];
+  #points = [];
 
   get destinations() {
     return this.#destinations;
   }
 
-  async updatePoint(updateType, point) {
-    try {
-      const response = await this.#pointsApiService.updatePoint(point);
-      const updatedPoint = adaptToClient(response);
-      this.#points = updateItem(this.#points, updatedPoint);
-      this._notify(updateType, updatedPoint);
-    } catch (error) {
-      throw new Error('Can\'t update point');
-    }
-  }
-
-  async addPoint(updateType, point) {
-    try {
-      const response = await this.#pointsApiService.addPoint(point);
-      const newPoint = adaptToClient(response);
-      this.#points = [newPoint, ...this.#points];
-      this._notify(updateType, newPoint);
-    } catch(err) {
-      throw new Error('Can\'t add point');
-    }
+  constructor({ pointsApiService }) {
+    super();
+    this.#pointsApiService = pointsApiService;
   }
 
   async deletePoint(updateType, point) {
@@ -56,6 +26,25 @@ export default class PointsListModel extends Observable {
     } catch(err) {
       throw new Error('Can\'t delete point');
     }
+  }
+
+  get points() {
+    return this.#points;
+  }
+
+  async addPoint(updateType, point) {
+    try {
+      const currentResponse = await this.#pointsApiService.addPoint(point);
+      const newPoint = adaptToClient(currentResponse);
+      this.#points = [newPoint, ...this.#points];
+      this._notify(updateType, newPoint);
+    } catch(err) {
+      throw new Error('Can\'t add point');
+    }
+  }
+
+  get offers() {
+    return this.#offers;
   }
 
   async init() {
@@ -71,6 +60,17 @@ export default class PointsListModel extends Observable {
       this.#destinations = [];
       isError = true;
     }
-    this._notify(UPDATE_TYPES.INIT, { isError });
+    this._notify(UpdateType.INIT, { isError });
+  }
+
+  async updatePoint(updateType, point) {
+    try {
+      const currentResponse = await this.#pointsApiService.updatePoint(point);
+      const updatedPoint = adaptToClient(currentResponse);
+      this.#points = updateItem(this.#points, updatedPoint);
+      this._notify(updateType, updatedPoint);
+    } catch (error) {
+      throw new Error('Can\'t update point');
+    }
   }
 }

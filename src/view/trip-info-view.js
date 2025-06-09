@@ -1,12 +1,13 @@
 import { CITIES_LENGTH_BORDER } from '../const.js';
 import AbstractView from '../framework/view/abstract-view.js';
-import { getPointsDataRange, getTripPrice, getTripRoute } from '../utils/point-utils.js';
 
-function createTripInfoTemplate(dateRange, cities, totalPrice) {
-  return (
-    `<section class="trip-main__trip-info  trip-info">
+function createTemplate(dateRange, routeCities, totalPrice) {
+  const route = routeCities.length > CITIES_LENGTH_BORDER ? `${routeCities[0]} &mdash; ... &mdash; ${routeCities.at(-1)}` : routeCities.join(' &mdash; ');
+
+  return `
+    <section class="trip-main__trip-info  trip-info">
       <div class="trip-info__main">
-        <h1 class="trip-info__title">${cities.length > CITIES_LENGTH_BORDER ? `${cities[0]} &mdash; .... &mdash; ${cities.at(-1)}` : cities.join(' &mdash; ')}</h1>
+        <h1 class="trip-info__title">${route}</h1>
 
         <p class="trip-info__dates">${dateRange.startDate}&nbsp;&mdash;&nbsp;${dateRange.endDate}</p>
       </div>
@@ -14,27 +15,23 @@ function createTripInfoTemplate(dateRange, cities, totalPrice) {
       <p class="trip-info__cost">
         Total: &euro;&nbsp;<span class="trip-info__cost-value">${totalPrice}</span>
       </p>
-    </section>`
-  );
+    </section>
+    `;
 }
 
 export default class TripInfoView extends AbstractView {
-  #points = null;
-  #destinations = null;
-  #offers = null;
+  #dateRange;
+  #route;
+  #totalPrice;
 
-  constructor(points, destinations, offers) {
+  constructor(dateRange, routeCities, totalPrice) {
     super();
-    this.#points = points;
-    this.#destinations = destinations;
-    this.#offers = offers;
+    this.#dateRange = dateRange;
+    this.#route = routeCities;
+    this.#totalPrice = totalPrice;
   }
 
   get template() {
-    return createTripInfoTemplate(
-      getPointsDataRange(this.#points),
-      getTripRoute(this.#points, this.#destinations),
-      getTripPrice(this.#points, this.#offers)
-    );
+    return createTemplate(this.#dateRange, this.#route, this.#totalPrice);
   }
 }

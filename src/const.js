@@ -1,44 +1,63 @@
-const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
-
-const FILTER_TYPES = {
-  EVERYTHING: 'EVERYTHING',
-  FUTURE: 'FUTURE',
-  PRESENT: 'PRESENT',
-  PAST: 'PAST'
+export const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
 };
 
-const EMPTY_LIST_MESSAGES = {
-  [FILTER_TYPES.EVERYTHING]: 'Click New Event to create your first point',
-  [FILTER_TYPES.PAST]: 'There are no past events now',
-  [FILTER_TYPES.PRESENT]: 'There are no present events now',
-  [FILTER_TYPES.FUTURE]: 'There are no future events now'
+export const EmptyListMessage = {
+  [FilterType.EVERYTHING]: 'Click New Event to create your first point',
+  [FilterType.PAST]: 'There are no past events now',
+  [FilterType.PRESENT]: 'There are no present events now',
+  [FilterType.FUTURE]: 'There are no future events now',
 };
 
-const SORT_TYPES = {
-  DAY: 'day',
-  TIME: 'time',
-  PRICE: 'price',
-};
-
-const MODE = {
+export const Mode = {
   DEFAULT: 'DEFAULT',
   EDITING: 'EDITING',
 };
 
-const ACTIONS = {
+export const SortType = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers',
+};
+
+export const ActionType = {
   UPDATE_POINT: 'UPDATE_POINT',
   DELETE_POINT: 'DELETE_POINT',
   ADD_POINT: 'ADD_POINT',
 };
 
-const UPDATE_TYPES = {
+export const FormType = {
+  CREATE: 'CREATE',
+  EDIT: 'EDIT',
+};
+
+export const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
   INIT: 'INIT',
 };
 
-const EMPTY_POINT = {
+export const Method = {
+  GET: 'GET',
+  PUT: 'PUT',
+  POST: 'POST',
+  DELETE: 'DELETE',
+};
+
+export const TimeLimit = {
+  LOWER_LIMIT: 200,
+  UPPER_LIMIT: 500,
+};
+
+export const EVENTS_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
+
+export const EMPTY_POINT = {
   type: 'flight',
   destination: null,
   dateFrom: null,
@@ -48,24 +67,7 @@ const EMPTY_POINT = {
   isFavorite: false,
 };
 
-const FORM_TYPE = {
-  CREATE: 'CREATE',
-  EDIT: 'EDIT',
-};
-
-const METHOD = {
-  GET: 'GET',
-  PUT: 'PUT',
-  POST: 'POST',
-  DELETE: 'DELETE',
-};
-
-const TIME_LIMIT = {
-  LOWER_LIMIT: 200,
-  UPPER_LIMIT: 500,
-};
-
-const FLATPICKR_CONFIG = {
+export const FLATPICKR_CONFIG = {
   dateFormat: 'd/m/y H:i',
   enableTime: true,
   locale: {
@@ -75,26 +77,8 @@ const FLATPICKR_CONFIG = {
   time_24hr: true,
 };
 
-const AUTHORIZATION = 'Basic fra114a3i8a7t0rr';
+export const CITIES_LENGTH_BORDER = 3;
 
-const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
+export const AUTHORIZATION = 'Basic hTy9pLk3nXc7vR5t';
 
-const CITIES_LENGTH_BORDER = 3;
-
-export {
-  EVENT_TYPES,
-  FILTER_TYPES,
-  EMPTY_LIST_MESSAGES,
-  SORT_TYPES,
-  MODE,
-  ACTIONS,
-  UPDATE_TYPES,
-  EMPTY_POINT,
-  FORM_TYPE,
-  METHOD,
-  AUTHORIZATION,
-  END_POINT,
-  TIME_LIMIT,
-  CITIES_LENGTH_BORDER,
-  FLATPICKR_CONFIG,
-};
+export const END_POINT = 'https://24.objects.htmlacademy.pro/big-trip';
